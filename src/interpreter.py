@@ -1,9 +1,9 @@
 from config import CONFIG_INSTANCE
 from os import path, mkdir, scandir
-from local_utils.utils import HoopaUtils
+from local_utils.hoopa_utils import HoopaUtils
 import yaml
 from yaml.parser import Parser
-from local_types.data_types import PMD2OverlayData
+from local_utils.data_types import PMD2OverlayData
 import json
 
 
@@ -74,8 +74,8 @@ class Interpreter:
                 
             elif symbol_file.is_dir():
                 for subfile in scandir(symbol_file.path):
-                     if symbol_file.is_file() and symbol_file.name.endswith(".yml"):
-                        self.symbol_tree[symbol_file.name] = self.get_symbol_data(symbol_file.path)
+                     if subfile.is_file() and subfile.name.endswith(".yml"):
+                        self.symbol_tree[subfile.name] = self.get_symbol_data(subfile.path)
             
         ranges_NA = {}
         ranges_EU = {}
@@ -101,6 +101,20 @@ class Interpreter:
             json.dump(ranges_EU, eu, indent=4)
         with open(out_jp, "w") as jp:
             json.dump(ranges_JP, jp, indent=4)
+            
+        test_out = path.join(self.out_folder, "test.txt")
+        with open(test_out, "w") as put:
+            
+            for name, symbol in self.symbol_tree.items():
+                output_string = ""
+                output_string += "%s" % HoopaUtils.to_screaming_snake_case(HoopaUtils.remove_file_extension_from_str(name))
+                output_string += " = PMD2AddressRange("
+                output_string += "NA=[%s, %s], " % (HoopaUtils.int_to_hex_str_formatted(symbol.range.NA.addr_from), HoopaUtils.int_to_hex_str_formatted(symbol.range.NA.addr_to))
+                output_string += "EU=[%s, %s], " % (HoopaUtils.int_to_hex_str_formatted(symbol.range.EU.addr_from), HoopaUtils.int_to_hex_str_formatted(symbol.range.EU.addr_to))
+                output_string += "JP=[%s, %s]" % (HoopaUtils.int_to_hex_str_formatted(symbol.range.JP.addr_from), HoopaUtils.int_to_hex_str_formatted(symbol.range.JP.addr_to))
+                output_string += ")\n"
+                
+                put.write(output_string)
             
             
     def get_symbol_data(self, file_path: str) -> PMD2OverlayData:
