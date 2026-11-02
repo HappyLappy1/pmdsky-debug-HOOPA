@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-
 from typing import Any, Generic, TypeVar
 import os
 import toml
-from local_utils.hoopa_utils import HoopaUtils
 from io import TextIOWrapper, SEEK_END
+
+from .local_utils.hoopa_utils import HoopaUtils
 
 # There's definitely a better way of doing this
 def relative_path(path) -> str:

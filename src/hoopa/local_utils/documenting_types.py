@@ -1,8 +1,9 @@
-from data_types import PMD2RegionalData, FunctionArgument, ROMSections
+from hoopa.local_utils.data_types import PMD2RegionalData, FunctionArgument, ROMSectionFileData
 from io import TextIOWrapper, SEEK_END
 import os
 from enum import StrEnum
-from local_utils.hoopa_utils import HoopaUtils
+
+from .hoopa_utils import HoopaUtils
 
 
 
@@ -17,7 +18,8 @@ class BaseYamlDocumentObject:
     address: PMD2RegionalData
     length: PMD2RegionalData
     description: list[str]
-    target_overlay: ROMSections
+    target_overlay: ROMSectionFileData # TODO: FIND, WRITE
+    
     
     def get_full_yaml_string(self, indent: int = 0) -> str:
         
@@ -143,7 +145,8 @@ class FunctionYamlDocumentObject(BaseYamlDocumentObject):
                 if getattr(self, "arguments"):
                     index = 0
                     for arg in self.arguments:
-                        output_string += "%sr%s: %s\n" % (indent_str, index, HoopaUtils.type_to_human_readable(arg.type))
+                        output_string += "%sr%s: %s\n" % (indent_str, str(index), arg.printed_type)
+                        index += 1
 
                 if getattr(self, "return_type"):
                     output_string += "%sreturns: %s\n" % (indent_str, HoopaUtils.type_to_human_readable(self.return_type))
