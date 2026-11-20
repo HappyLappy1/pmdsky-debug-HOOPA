@@ -120,6 +120,12 @@ def indent_string(amount: int = 2, input: str = "") -> str:
     return indent_complete + input
 
 
+def indent_string_list(amount: int, input_items: list[str]) -> list[str]:
+    new_items: list[str] = []
+    for string in input_items:
+        new_items.append(indent_string(amount, string))
+    return new_items
+
 
 def type_to_human_readable(input_string: str) -> str:
     '''
@@ -165,9 +171,11 @@ class Pair(Generic[T, V]):
     left: T
     right: V
     
+    
     def __init__(self, a: T, b: V) -> None:
         self.left = a
         self.right = b
+        
         
     def __str__(self) -> str:
         return "Pair<%s, %s>" % (self.left, self.right)
