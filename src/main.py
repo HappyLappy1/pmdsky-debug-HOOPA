@@ -9,4 +9,4 @@ if __name__ == '__main__':
     
     
     print("\tHOOPA - V%s" % version)
-    print(SymbolsYamlFile.from_yaml("/Users/itred/Desktop/Programming/Active_Projects/PMD-FotS-romhack/CoT/pmdsky-debug/symbols/overlay05.yml"))
+    print(SymbolsYamlFile.from_yaml("/Users/itred/Desktop/Programming/Active_Projects/PMD-FotS-romhack/CoT/pmdsky-debug/symbols/arm9.yml"))

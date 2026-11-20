@@ -89,7 +89,7 @@ def to_upper_camel_case(input: str) -> str:
         .replace("_", "")
     return input_reconstructed
 
-
+# TODO: SCREAMING_SNAKE_CASE <-> SCREAMING-KEBAB_CASE function, for work with symbol extended versions
 
 def to_screaming_snake_case(input: str) -> str:
     input_reconstructed = ""

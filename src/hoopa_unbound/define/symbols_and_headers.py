@@ -28,15 +28,15 @@ class ExtendedRegions(StrEnum):
     EU = "EU"
     NA = "NA"
     JP = "JP"
-    EU_ITCM = "EU_ITCM"
-    NA_ITCM = "NA_ITCM"
-    JP_ITCM = "JP_ITCM"
-    EU_WRAM = "EU_WRAM"
-    NA_WRAM = "NA_WRAM"
-    JP_WRAM = "JP_WRAM"
-    EU_RAM = "EU_RAM"
-    NA_RAM = "NA_RAM"
-    JP_RAM = "JP_RAM"
+    EU_ITCM = "EU-ITCM"
+    NA_ITCM = "NA-ITCM"
+    JP_ITCM = "JP-ITCM"
+    EU_WRAM = "EU-WRAM"
+    NA_WRAM = "NA-WRAM"
+    JP_WRAM = "JP-WRAM"
+    EU_RAM = "EU-RAM"
+    NA_RAM = "NA-RAM"
+    JP_RAM = "JP-RAM"
     
     @staticmethod
     def from_name(name: str) -> ExtendedRegions:
@@ -178,7 +178,7 @@ class Symbol():
     
     
         
-    def __init__(self, name: str, address: RegionalData, length: RegionalData = RegionalData(), description: list[str] = []) -> None:
+    def __init__(self, name: str = "", address: RegionalData = RegionalData(), length: RegionalData = RegionalData(), description: list[str] = []) -> None:
         
         self.name = name 
         self.address = address
@@ -208,20 +208,42 @@ class Symbol():
                 string_list.extend(indent_string_list(2, self.description))
                 
         return string_list
+    
+    
+    @classmethod
+    def from_data(cls, data: dict[str, Any]) -> Self:
+        '''
+        Initializes this object from a dictionary of data, provided the dictionary has keys mirroring its fields.
+        '''
+        self = cls()
+        if "name" in data:
+            self.name = data["name"]
             
+        if "address" in data:
+            self.address = RegionalData.from_dict(data["address"])
+        
+        if "length" in data:
+            self.length = RegionalData.from_dict(data["length"])
+            
+        if "description" in data:
+            self.description = []
+            for line in data["description"].split("\n"):
+                self.description.append(line)
+                
+        return self
 
 
 # Both of these will eventually implement behavior to write the symbol to a header, hence the separated classes
         
 class DataSymbol(Symbol):
     
-    def __init__(self, name: str, address: RegionalData, length: RegionalData = RegionalData(), description: list[str] = []) -> None:
+    def __init__(self, name: str = "", address: RegionalData = RegionalData(), length: RegionalData = RegionalData(), description: list[str] = []) -> None:
         super().__init__(to_screaming_snake_case(name), address, length, description)
         
 
 class FunctionSymbol(Symbol):
 
-    def __init__(self, name: str, address: RegionalData, length: RegionalData = RegionalData(), description: list[str] = []) -> None:
+    def __init__(self, name: str = "", address: RegionalData = RegionalData(), length: RegionalData = RegionalData(), description: list[str] = []) -> None:
         super().__init__(to_upper_camel_case(name), address, length, description)
         
         
@@ -246,7 +268,7 @@ class SymbolsYamlFile:
     functions: list[FunctionSymbol] = []
     
     
-    def __init__(self, name: str, versions: list[ExtendedRegions], address: ExtendedRegionalData, length: ExtendedRegionalData, description: list[str] = [], subregions: list[SymbolsYamlFile] = []) -> None:
+    def __init__(self, name: str = "", versions: list[ExtendedRegions] = [], address: ExtendedRegionalData = ExtendedRegionalData(), length: ExtendedRegionalData = ExtendedRegionalData(), description: list[str] = [], subregions: list[SymbolsYamlFile] = []) -> None:
         self.name = name
         self.versions = versions
         self.address = address
@@ -255,13 +277,13 @@ class SymbolsYamlFile:
         self.subregions = subregions
         
     
-    @staticmethod
-    def from_yaml(yaml_file_path: str) -> SymbolsYamlFile:
+    @classmethod
+    def from_yaml(cls, yaml_file_path: str) -> Self:
         
         if not path.isfile(yaml_file_path) or not (yaml_file_path.endswith(".yml") or yaml_file_path.endswith(".yaml")):
             raise FileNotFoundError(f"HOOPA_UNBOUND - ERROR: SymbolsYamlFile attempted to be constructed with file at path [ {yaml_file_path} ], but the given path either doesn't exist, or is not a yaml (.yml) file!")
         
-        self = SymbolsYamlFile("", [], ExtendedRegionalData(), ExtendedRegionalData())
+        self = cls()
         
         with open(yaml_file_path, "r+") as opened_file:
             raw_data: dict[str, Any] = safe_load(opened_file)
@@ -287,8 +309,8 @@ class SymbolsYamlFile:
                     
                     self.versions = []
                     for ver in data["versions"]:
-                        if ver in ExtendedRegions._member_map_:
-                            self.versions.append(ExtendedRegions.from_name(ver))
+                        self.versions.append(ExtendedRegions.from_name(ver))
+                            
                             
                             
                 if "address" in data:
@@ -318,7 +340,7 @@ class SymbolsYamlFile:
                     if type(data["description"]) != str:
                         raise TypeError(
                             f"HOOPA_UNBOUND - ERROR: attempted to parse [ {yaml_file_path} ] as a SymbolsYamlFile object, but it was malformed!"
-                            f"\nSpecifically: field `description` was present, but it wasn't a string or multi-line string as expected! For some reason, it is \"{data['length']}\"."
+                            f"\nSpecifically: field `description` was present, but it wasn't a string or multi-line string as expected! For some reason, it is \"{data['description']}\"."
                         )
                     
                     self.description = []
@@ -331,18 +353,46 @@ class SymbolsYamlFile:
                     pass
                 
                 
+                if "functions" in data:
+                    
+                    if type(data["functions"]) != list:
+                        raise TypeError(
+                            f"HOOPA_UNBOUND - ERROR: attempted to parse [ {yaml_file_path} ] as a SymbolsYamlFile object, but it was malformed!"
+                            f"\nSpecifically: field `functions` was present, but it wasn't a list of dictionaries as expected! For some reason, it is \"{data['functions']}\"."
+                        )
+                    
+                    self.functions = []
+                    for func in data["functions"]:
+                        self.functions.append(FunctionSymbol.from_data(func))
+                       
+                        
+                if "data" in data:
+        
+                    if type(data["data"]) != list:
+                        raise TypeError(
+                            f"HOOPA_UNBOUND - ERROR: attempted to parse [ {yaml_file_path} ] as a SymbolsYamlFile object, but it was malformed!"
+                            f"\nSpecifically: field `data` was present, but it wasn't a list of dictionaries as expected! For some reason, it is \"{data['data']}\"."
+                        )
+        
+                    self.data = []
+                    for dat in data["data"]:
+                        self.data.append(DataSymbol.from_data(dat))
+        
+        
+                    
+                
             return self
     
     
     def __str__(self) -> str:
         strings_list = self.compose_yaml_header()
         if len(self.functions) > 0:
-            strings_list.append(f"  functions: [ {len(self.functions)} ... ]")
+            strings_list.append(f"  functions: [ ... (x{len(self.functions)}) ]")
         else:
             strings_list.append(f"  functions: []")
         
         if len(self.data) > 0:
-            strings_list.append(f"  data: [ {len(self.data)} ... ]")
+            strings_list.append(f"  data: [ ... (x{len(self.data)}) ]")
         else:
             strings_list.append(f"  data: []")
         
