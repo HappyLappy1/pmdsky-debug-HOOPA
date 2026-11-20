@@ -1,0 +1,11 @@
+# Required in these particular versions to get skytemple-files to include properly
+# NOTE: works best on python 3.13.7
+setuptools
+pip<24 
+wheel<0.45
+
+skytemple-files
+ndspy
+pyyaml
+colorama
+toml
